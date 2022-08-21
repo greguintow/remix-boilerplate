@@ -1,0 +1,47 @@
+# Dependencies
+node_modules
+
+# Remix related
+/.cache
+/build
+/public/build
+
+# Tailwind related
+
+/app/styles/tailwind.css
+
+# Cypress related
+
+/cypress/screenshots
+/cypress/videos
+
+# Docker cache
+
+/postgres-data
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.VSCodeCounter
+.vscode/**/*
+!.vscode/extensions.json
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+
+# misc
+npm-debug.log
+yarn-error.log
+testem.log
+debug.log
+package-lock.json
+.eslintcache

@@ -1,0 +1,13 @@
+# Assets
+**/assets
+
+# Files
+*.json
+*.css
+*.js
+cypress.config.ts
+
+# Remix related
+/.cache
+/build
+/public/build
