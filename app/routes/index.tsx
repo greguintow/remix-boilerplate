@@ -1,6 +1,15 @@
+import { Button } from '@mui/material'
+import type { HeadersFunction } from '@remix-run/node'
 import { Link } from '@remix-run/react'
 
 import { useOptionalUser } from '~/utils'
+
+export const headers: HeadersFunction = () => {
+  return {
+    'cache-control': 'max-age=3600',
+    etag: '123'
+  }
+}
 
 const Index = () => {
   const user = useOptionalUser()
@@ -36,9 +45,11 @@ const Index = () => {
                   <div className="space-y-4 sm:mx-auto sm:inline-grid sm:grid-cols-2 sm:gap-5 sm:space-y-0">
                     <Link
                       to="/join"
-                      className="flex items-center justify-center rounded-md border border-transparent bg-white px-4 py-3 text-base font-medium text-blue-700 shadow-sm hover:bg-blue-50 sm:px-8"
+                      // className="flex items-center justify-center rounded-md border border-transparent bg-white px-4 py-3 text-base font-medium text-blue-700 shadow-sm hover:bg-blue-50 sm:px-8"
                     >
-                      Sign up
+                      <Button variant="contained" size="large" disableElevation>
+                        Sign up
+                      </Button>
                     </Link>
                     <Link
                       to="/login"

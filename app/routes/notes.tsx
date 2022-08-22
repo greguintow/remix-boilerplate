@@ -1,3 +1,4 @@
+import { Button } from '@mui/material'
 import type { LoaderFunction } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Form, Link, NavLink, Outlet, useLoaderData } from '@remix-run/react'
@@ -28,17 +29,14 @@ const NotesPage = () => {
         </h1>
         <p>{user.email}</p>
         <Form action="/logout" method="post">
-          <button
-            type="submit"
-            className="rounded bg-slate-600 py-2 px-4 text-blue-100 hover:bg-blue-500 active:bg-blue-600"
-          >
+          <Button type="submit" variant="contained" color="secondary">
             Logout
-          </button>
+          </Button>
         </Form>
       </header>
 
-      <main className="flex h-full bg-white">
-        <div className="h-full w-80 border-r bg-gray-50">
+      <main className="flex grow bg-white">
+        <div className="w-80 border-r bg-gray-50">
           <Link to="new" className="block p-4 text-xl text-blue-500">
             + New Note
           </Link>

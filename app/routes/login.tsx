@@ -1,11 +1,16 @@
-import * as React from 'react'
+import { Button } from '@mui/material'
 import type { ActionFunction, LoaderFunction, MetaFunction } from '@remix-run/node'
 import { json, redirect } from '@remix-run/node'
 import { Form, Link, useActionData, useSearchParams } from '@remix-run/react'
 
 import { createUserSession, getUserId } from '~/session.server'
 import { verifyLogin } from '~/models/user.server'
-import { safeRedirect, validateEmail } from '~/utils'
+import { safeRedirect } from '~/utils'
+import type { ErrorResponse } from '~/hooks/useCustomForm'
+import { validateSchema } from '~/hooks/useCustomForm'
+import type { LoginForm } from '~/forms/useLoginForm'
+import { useLoginForm, loginValidationSchema } from '~/forms/useLoginForm'
+import { FormInput } from '~/components/FormInput'
 
 export const loader: LoaderFunction = async ({ request }) => {
   const userId = await getUserId(request)
@@ -13,36 +18,43 @@ export const loader: LoaderFunction = async ({ request }) => {
   return json({})
 }
 
-interface ActionData {
-  errors?: {
-    email?: string
-    password?: string
-  }
-}
+interface ActionData extends ErrorResponse<LoginForm> {}
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData()
-  const email = formData.get('email')
-  const password = formData.get('password')
+  const email = formData.get('email') as string
+  const password = formData.get('password') as string
   const redirectTo = safeRedirect(formData.get('redirectTo'), '/')
   const remember = formData.get('remember')
 
-  if (!validateEmail(email)) {
-    return json<ActionData>({ errors: { email: 'Email is invalid' } }, { status: 400 })
+  const input: LoginForm = {
+    email,
+    password
   }
 
-  if (typeof password !== 'string' || password.length === 0) {
-    return json<ActionData>({ errors: { password: 'Password is required' } }, { status: 400 })
+  const { data, errorResponse } = await validateSchema(loginValidationSchema, input)
+
+  if (errorResponse) {
+    return errorResponse
   }
 
-  if (password.length < 8) {
-    return json<ActionData>({ errors: { password: 'Password is too short' } }, { status: 400 })
-  }
-
-  const user = await verifyLogin(email, password)
+  const user = await verifyLogin(data!.email, data!.password)
 
   if (!user) {
-    return json<ActionData>({ errors: { email: 'Invalid email or password' } }, { status: 400 })
+    return json<ActionData>(
+      {
+        errors: {
+          email: {
+            message: 'Invalid email or password',
+            value: email
+          }
+        },
+        input: {
+          email
+        }
+      },
+      { status: 400 }
+    )
   }
 
   return createUserSession({
@@ -61,78 +73,42 @@ export const meta: MetaFunction = () => {
 
 const LoginPage = () => {
   const [searchParams] = useSearchParams()
+  const [{ isSubmitDisabled }, { getInputProps, onSubmit }] = useLoginForm()
   const redirectTo = searchParams.get('redirectTo') || '/notes'
   const actionData = useActionData() as ActionData
-  const emailRef = React.useRef<HTMLInputElement>(null)
-  const passwordRef = React.useRef<HTMLInputElement>(null)
-
-  React.useEffect(() => {
-    if (actionData?.errors?.email) {
-      emailRef.current?.focus()
-    } else if (actionData?.errors?.password) {
-      passwordRef.current?.focus()
-    }
-  }, [actionData])
 
   return (
     <div className="flex min-h-full flex-col justify-center">
       <div className="mx-auto w-full max-w-md px-8">
-        <Form method="post" className="space-y-6" noValidate>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email address
-            </label>
-            <div className="mt-1">
-              <input
-                ref={emailRef}
-                id="email"
-                required
-                autoFocus
-                name="email"
-                type="email"
-                autoComplete="email"
-                aria-invalid={actionData?.errors?.email ? true : undefined}
-                aria-describedby="email-error"
-                className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-              />
-              {actionData?.errors?.email && (
-                <div className="pt-1 text-red-700" id="email-error">
-                  {actionData.errors.email}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <div className="mt-1">
-              <input
-                id="password"
-                ref={passwordRef}
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                aria-invalid={actionData?.errors?.password ? true : undefined}
-                aria-describedby="password-error"
-                className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-              />
-              {actionData?.errors?.password && (
-                <div className="pt-1 text-red-700" id="password-error">
-                  {actionData.errors.password}
-                </div>
-              )}
-            </div>
-          </div>
-
+        <Form method="post" className="space-y-6" onSubmit={onSubmit()} noValidate>
+          <FormInput
+            label="Email address"
+            id="email"
+            type="email"
+            autoComplete="email"
+            {...getInputProps('email', {
+              errorResponse: actionData
+            })}
+          />
+          <FormInput
+            label="Password"
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            {...getInputProps('password', {
+              errorResponse: actionData
+            })}
+          />
           <input type="hidden" name="redirectTo" value={redirectTo} />
-          <button
+          <Button
+            fullWidth
             type="submit"
-            className="w-full rounded bg-blue-500  py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400"
+            disabled={isSubmitDisabled}
+            disableElevation
+            variant="contained"
           >
-            Log in
-          </button>
+            Log In
+          </Button>
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <input

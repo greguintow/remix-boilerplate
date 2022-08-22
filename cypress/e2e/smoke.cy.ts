@@ -7,7 +7,7 @@ describe('smoke tests', () => {
 
   it('should allow you to register and login', () => {
     const loginForm = {
-      email: `${faker.internet.userName()}@example.com`,
+      email: `${faker.internet.userName()}@example.com`.toLowerCase(),
       password: faker.internet.password()
     }
     cy.then(() => ({ email: loginForm.email })).as('user')
@@ -19,7 +19,8 @@ describe('smoke tests', () => {
     cy.findByLabelText(/password/i).type(loginForm.password)
     cy.findByRole('button', { name: /create account/i }).click()
 
-    cy.findByRole('link', { name: /notes/i }).click()
+    cy.findByRole('link', { name: /notes/i }).click({ force: true })
+    cy.wait(1000)
     cy.findByRole('button', { name: /logout/i }).click()
     cy.findByRole('link', { name: /log in/i })
   })
@@ -42,7 +43,7 @@ describe('smoke tests', () => {
     cy.findByRole('button', { name: /save/i }).click()
 
     cy.findByRole('button', { name: /delete/i }).click()
-
+    cy.wait(1000)
     cy.findByText('No notes yet')
   })
 })
