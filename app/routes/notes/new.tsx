@@ -49,13 +49,7 @@ const NewNotePage = () => {
         })}
       />
 
-      <FormInput
-        id="body"
-        label="Body:"
-        rows={8}
-        multiline
-        {...getInputProps('body', { errorResponse: actionData })}
-      />
+      <FormInput id="body" label="Body:" {...getInputProps('body', { errorResponse: actionData })} />
 
       <div className="text-right">
         <Button type="submit" disabled={isSubmitDisabled} disableElevation variant="contained">
