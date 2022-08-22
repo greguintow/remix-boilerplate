@@ -1,14 +1,17 @@
-import { renderToString } from 'react-dom/server'
-import { RemixServer } from 'remix'
-import type { EntryContext } from 'remix'
-import CssBaseline from '@mui/material/CssBaseline'
-import { ThemeProvider } from '@mui/material/styles'
-import { CacheProvider } from '@emotion/react'
+import { PassThrough } from 'stream'
+import { renderToPipeableStream } from 'react-dom/server'
+import { RemixServer } from '@remix-run/react'
+import { Response } from '@remix-run/node'
+import type { EntryContext, Headers } from '@remix-run/node'
+import isBot from 'isbot'
 import createEmotionServer from '@emotion/server/create-instance'
+import { CacheProvider } from '@emotion/react'
 import { createEmotionCache } from './utils'
-import { materialTheme } from './theme'
+import { AppWrapper } from './AppWrapper'
 
-export default function handleRequest(
+const ABORT_DELAY = 5000
+
+export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
@@ -16,21 +19,45 @@ export default function handleRequest(
 ) {
   const cache = createEmotionCache()
   const { extractCriticalToChunks } = createEmotionServer(cache)
+  const callbackName = isBot(request.headers.get('user-agent')) ? 'onAllReady' : 'onShellReady'
 
   const MuiRemixServer = () => (
     <CacheProvider value={cache}>
-      <ThemeProvider theme={materialTheme}>
-        {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-        <CssBaseline />
+      <AppWrapper>
         <RemixServer context={remixContext} url={request.url} />
-      </ThemeProvider>
+      </AppWrapper>
     </CacheProvider>
   )
 
-  // Render the component to a string.
-  const html = renderToString(<MuiRemixServer />)
+  const response = await new Promise<Response>((resolve, reject) => {
+    let didError = false
 
-  // Grab the CSS from emotion
+    const { pipe, abort } = renderToPipeableStream(<MuiRemixServer />, {
+      [callbackName]() {
+        const body = new PassThrough()
+
+        responseHeaders.set('Content-Type', 'text/html')
+        resolve(
+          new Response(body, {
+            status: didError ? 500 : responseStatusCode,
+            headers: responseHeaders
+          })
+        )
+        pipe(body)
+      },
+      onShellError(err: unknown) {
+        reject(err)
+      },
+      onError(error: unknown) {
+        didError = true
+        console.error(error)
+      }
+    })
+    setTimeout(abort, ABORT_DELAY)
+  })
+
+  const html = await response.text()
+
   const { styles } = extractCriticalToChunks(html)
 
   let stylesHTML = ''
@@ -41,15 +68,12 @@ export default function handleRequest(
     stylesHTML = `${stylesHTML}${newStyleTag}`
   })
 
-  // Add the Emotion style tags after the insertion point meta tag
   const markup = html.replace(
     /<meta(\s)*name="emotion-insertion-point"(\s)*content="emotion-insertion-point"(\s)*\/>/,
     `<meta name="emotion-insertion-point" content="emotion-insertion-point"/>${stylesHTML}`
   )
 
-  responseHeaders.set('Content-Type', 'text/html')
-
-  return new Response(`<!DOCTYPE html>${markup}`, {
+  return new Response(markup, {
     status: responseStatusCode,
     headers: responseHeaders
   })

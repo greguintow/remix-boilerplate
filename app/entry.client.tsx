@@ -1,39 +1,53 @@
-import type * as React from 'react'
-import { useState } from 'react'
+import * as React from 'react'
+import { RemixBrowser } from '@remix-run/react'
 import { hydrateRoot } from 'react-dom/client'
-import { RemixBrowser } from 'remix'
 import { CacheProvider } from '@emotion/react'
-import { ThemeProvider } from '@mui/material/styles'
-import CssBaseline from '@mui/material/CssBaseline'
+import { AppWrapper } from './AppWrapper'
 import { createEmotionCache } from './utils'
+import type { ClientStyleContextData } from './contexts'
 import { ClientStyleContext } from './contexts'
-import { materialTheme } from './theme'
 
 interface ClientCacheProviderProps {
   children: React.ReactNode
 }
-const ClientCacheProvider = ({ children }: ClientCacheProviderProps) => {
-  const [cache, setCache] = useState(createEmotionCache())
+export const ClientCacheProvider = ({ children }: ClientCacheProviderProps) => {
+  const [cache, setCache] = React.useState(createEmotionCache())
 
-  function reset() {
+  const reset = React.useCallback(() => {
     setCache(createEmotionCache())
-  }
+  }, [])
+
+  const clientStyleContext = React.useMemo(
+    (): ClientStyleContextData => ({
+      reset
+    }),
+    [reset]
+  )
 
   return (
-    // eslint-disable-next-line react/jsx-no-constructed-context-values
-    <ClientStyleContext.Provider value={{ reset }}>
+    <ClientStyleContext.Provider value={clientStyleContext}>
       <CacheProvider value={cache}>{children}</CacheProvider>
     </ClientStyleContext.Provider>
   )
 }
 
-hydrateRoot(
-  document,
-  <ClientCacheProvider>
-    <ThemeProvider theme={materialTheme}>
-      {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-      <CssBaseline />
-      <RemixBrowser />
-    </ThemeProvider>
-  </ClientCacheProvider>
-)
+function hydrate() {
+  React.startTransition(() => {
+    hydrateRoot(
+      document,
+      <React.StrictMode>
+        <ClientCacheProvider>
+          <AppWrapper>
+            <RemixBrowser />
+          </AppWrapper>
+        </ClientCacheProvider>
+      </React.StrictMode>
+    )
+  })
+}
+
+if (window.requestIdleCallback) {
+  window.requestIdleCallback(hydrate)
+} else {
+  window.setTimeout(hydrate, 1)
+}

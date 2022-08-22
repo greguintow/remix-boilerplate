@@ -1,5 +1,5 @@
 import CssBaseline from '@mui/material/CssBaseline'
-import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles'
+import { ThemeProvider } from '@mui/material/styles'
 import { materialTheme } from './theme'
 
 export interface AppWrapperProps {

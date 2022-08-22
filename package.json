@@ -48,7 +48,6 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.34.2",
-    "remix": "^1.6.8",
     "tiny-invariant": "^1.2.0",
     "yup": "^0.32.11"
   },
