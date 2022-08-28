@@ -1,7 +1,7 @@
-import { Button } from '@mui/material'
 import type { ActionFunction, LoaderFunction } from '@remix-run/node'
 import { json, redirect } from '@remix-run/node'
 import { Form, useCatch, useLoaderData } from '@remix-run/react'
+import { Button } from '@mui/material'
 import invariant from 'tiny-invariant'
 import { deleteNote, getNote } from '~/models/note.server'
 import { requireUserId } from '~/session.server'

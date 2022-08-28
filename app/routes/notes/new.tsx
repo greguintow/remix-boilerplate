@@ -1,7 +1,7 @@
-import { LoadingButton } from '@mui/lab'
 import type { ActionFunction } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { Form, useActionData } from '@remix-run/react'
+import { LoadingButton } from '@mui/lab'
 import { createNote } from '~/models/note.server'
 import { requireUserId } from '~/session.server'
 import type { CreateNoteForm } from '~/forms/useCreateNoteForm'

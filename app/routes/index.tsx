@@ -1,6 +1,6 @@
-import { Button } from '@mui/material'
 import type { HeadersFunction } from '@remix-run/node'
 import { Link } from '@remix-run/react'
+import { Button } from '@mui/material'
 
 import { useOptionalUser } from '~/utils'
 

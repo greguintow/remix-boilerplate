@@ -1,7 +1,7 @@
-import { Button } from '@mui/material'
 import type { LoaderFunction } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Form, Link, NavLink, Outlet, useLoaderData } from '@remix-run/react'
+import { Button } from '@mui/material'
 
 import { requireUserId } from '~/session.server'
 import { useUser } from '~/utils'

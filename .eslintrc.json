@@ -122,7 +122,13 @@
     "import/no-extraneous-dependencies": "off",
     "import/prefer-default-export": "off",
     "import/no-unresolved": "error",
-    "import/extensions": ["error", "never"],
+    "import/extensions": [
+      "error",
+      "never",
+      {
+        "css": "always"
+      }
+    ],
     "import/order": [
       "error",
       {
@@ -134,7 +140,17 @@
             "position": "before"
           },
           {
-            "pattern": "styled-components",
+            "pattern": "react-dom/*",
+            "group": "external",
+            "position": "before"
+          },
+          {
+            "pattern": "@remix-run/*",
+            "group": "external",
+            "position": "before"
+          },
+          {
+            "pattern": "@emotion/*",
             "group": "external",
             "position": "before"
           },

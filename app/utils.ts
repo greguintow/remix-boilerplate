@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import createCache from '@emotion/cache'
 import { useMatches } from '@remix-run/react'
+import createCache from '@emotion/cache'
 
 import type { User } from '~/models/user.server'
 
