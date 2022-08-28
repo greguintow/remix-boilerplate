@@ -13,14 +13,14 @@ FROM base as deps
 WORKDIR /myapp
 
 ADD package.json yarn.lock ./
-RUN yarn install --frozen-yarnlock
+RUN yarn install --frozen-lockfile
 
 # Setup production node_modules
 FROM base as production-deps
 
 WORKDIR /myapp
 
-COPY --from=deps /myapp/node_modules ./node_modules
+COPY --from=deps /myapp/node_modules /myapp/node_modules
 ADD package.json yarn.lock ./
 RUN npm prune --production
 
@@ -29,7 +29,7 @@ FROM base as build
 
 WORKDIR /myapp
 
-COPY --from=deps /myapp/node_modules ./node_modules
+COPY --from=deps /myapp/node_modules /myapp/node_modules
 
 ADD prisma .
 RUN yarn prisma:generate
@@ -46,11 +46,11 @@ FROM base
 
 WORKDIR /myapp
 
-COPY --from=production-deps /myapp/node_modules ./node_modules
-COPY --from=build /myapp/node_modules/.prisma ./node_modules/.prisma
+COPY --from=production-deps /myapp/node_modules /myapp/node_modules
+COPY --from=build /myapp/node_modules/.prisma /myapp/node_modules/.prisma
 
-COPY --from=build /myapp/build ./build
-COPY --from=build /myapp/public ./public
+COPY --from=build /myapp/build /myapp/build
+COPY --from=build /myapp/public /myapp/public
 ADD . .
 
 CMD ["yarn", "start"]
