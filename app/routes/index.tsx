@@ -43,20 +43,24 @@ const Index = () => {
                   </Link>
                 ) : (
                   <div className="space-y-4 sm:mx-auto sm:inline-grid sm:grid-cols-2 sm:gap-5 sm:space-y-0">
-                    <Link
+                    <Button
+                      component={Link}
                       to="/join"
-                      // className="flex items-center justify-center rounded-md border border-transparent bg-white px-4 py-3 text-base font-medium text-blue-700 shadow-sm hover:bg-blue-50 sm:px-8"
+                      variant="contained"
+                      color="info"
+                      size="large"
                     >
-                      <Button variant="contained" size="large" disableElevation>
-                        Sign up
-                      </Button>
-                    </Link>
-                    <Link
+                      Sign up
+                    </Button>
+                    <Button
+                      component={Link}
                       to="/login"
-                      className="flex items-center justify-center rounded-md bg-blue-500 px-4 py-3 font-medium text-white hover:bg-blue-600  "
+                      variant="contained"
+                      color="info"
+                      size="large"
                     >
                       Log In
-                    </Link>
+                    </Button>
                   </div>
                 )}
               </div>
