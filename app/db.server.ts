@@ -24,6 +24,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 function getClient() {
+  // eslint-disable-next-line no-console
   console.log(`🔌 setting up prisma client`)
   const client = new PrismaClient()
 
