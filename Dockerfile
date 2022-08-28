@@ -12,16 +12,16 @@ FROM base as deps
 
 WORKDIR /myapp
 
-ADD package.json yarn.lock .npmrc ./
-RUN npm install --production=false
+ADD package.json yarn.lock ./
+RUN yarn install --frozen-yarnlock
 
 # Setup production node_modules
 FROM base as production-deps
 
 WORKDIR /myapp
 
-COPY --from=deps /myapp/node_modules /myapp/node_modules
-ADD package.json yarn.lock .npmrc ./
+COPY --from=deps /myapp/node_modules ./node_modules
+ADD package.json package-lock.json ./
 RUN npm prune --production
 
 # Build the app
@@ -29,24 +29,28 @@ FROM base as build
 
 WORKDIR /myapp
 
-COPY --from=deps /myapp/node_modules /myapp/node_modules
+COPY --from=deps /myapp/node_modules ./node_modules
 
 ADD prisma .
-RUN npx prisma generate
+RUN yarn prisma:generate
 
 ADD . .
-RUN npm run build
+RUN yarn build
+
+# Run migrations
+ARG DATABASE_URL
+RUN yarn db:deploy
 
 # Finally, build the production image with minimal footprint
 FROM base
 
 WORKDIR /myapp
 
-COPY --from=production-deps /myapp/node_modules /myapp/node_modules
-COPY --from=build /myapp/node_modules/.prisma /myapp/node_modules/.prisma
+COPY --from=production-deps /myapp/node_modules ./node_modules
+COPY --from=build /myapp/node_modules/.prisma ./node_modules/.prisma
 
-COPY --from=build /myapp/build /myapp/build
-COPY --from=build /myapp/public /myapp/public
+COPY --from=build /myapp/build ./build
+COPY --from=build /myapp/public ./public
 ADD . .
 
-CMD ["npm", "start"]
+CMD ["yarn", "start"]
