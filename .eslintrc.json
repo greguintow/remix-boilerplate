@@ -216,7 +216,9 @@
       "@typescript-eslint/parser": [".ts", ".tsx"]
     },
     "import/resolver": {
-      "typescript": {}
+      "typescript": {
+        "extensions": [".ts", ".tsx", ".d.ts", ".js", ".jsx", ".json", ".css", ".node"]
+      }
     },
     "jest": {
       "version": 27

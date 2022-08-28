@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-import { screen, setup, userEvent } from '~/utils/test.util'
+import { screen, setup } from '~/utils/test.util'
 import { FormInput } from './FormInput'
 
 describe('FormInput', () => {
