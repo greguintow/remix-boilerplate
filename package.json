@@ -9,7 +9,7 @@
     "dev": "run-p dev:*",
     "dev:remix": "remix dev",
     "dev:css": "cross-env NODE_ENV=development npm run generate:css -- --watch",
-    "docker": "docker-compose up -d",
+    "docker": "docker-compose -f docker-compose-dev.yml up -d",
     "format": "prettier --write .",
     "generate:css": "tailwindcss -i ./app/styles/app.css -o ./app/styles/tailwind.css",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint . --fix",
