@@ -1,56 +1,26 @@
 # base node image
-FROM node:16-bullseye-slim as base
-
-# set for base and all layer that inherit from it
-ENV NODE_ENV production
+FROM node:16-alpine as base
 
 # Install openssl for Prisma
-RUN apt-get update && apt-get install -y openssl
+RUN apk update && apk add bash openssl
 
-# Install all node_modules, including dev dependencies
-FROM base as deps
+FROM base as build
 
-WORKDIR /myapp
+WORKDIR /var/app
 
 ADD package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
-
-# Setup production node_modules
-FROM base as production-deps
-
-WORKDIR /myapp
-
-COPY --from=deps /myapp/node_modules /myapp/node_modules
-ADD package.json yarn.lock ./
+COPY . .
+RUN yarn prisma:generate && yarn build
 RUN npm prune --production
 
-# Build the app
-FROM base as build
+FROM base AS runtime
+ENV NODE_ENV production
+WORKDIR /home/node/app
 
-WORKDIR /myapp
+COPY --from=build /var/app/node_modules ./node_modules
+COPY --from=build /var/app/build ./build
+COPY --from=build /var/app/public ./public
+COPY package.json prisma .docker/entrypoint.sh ./
 
-COPY --from=deps /myapp/node_modules /myapp/node_modules
-
-ADD prisma .
-RUN yarn prisma:generate
-
-ADD . .
-RUN yarn build
-
-# Run migrations
-ARG DATABASE_URL
-RUN yarn db:deploy
-
-# Finally, build the production image with minimal footprint
-FROM base
-
-WORKDIR /myapp
-
-COPY --from=production-deps /myapp/node_modules /myapp/node_modules
-COPY --from=build /myapp/node_modules/.prisma /myapp/node_modules/.prisma
-
-COPY --from=build /myapp/build /myapp/build
-COPY --from=build /myapp/public /myapp/public
-ADD . .
-
-CMD ["yarn", "start"]
+CMD ["sh", "/home/node/app/entrypoint.sh"]
