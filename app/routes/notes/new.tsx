@@ -36,7 +36,7 @@ const NewNotePage = () => {
   })
 
   return (
-    <Form method="post" noValidate className="flex w-full flex-col gap-2" onSubmit={onSubmit()}>
+    <Form method="post" noValidate className="flex w-full flex-col gap-4" onSubmit={onSubmit()}>
       <FormInput id="title" label="Title:" {...getInputProps('title')} />
       <FormInput id="body" label="Body:" {...getInputProps('body')} />
 

@@ -9,6 +9,27 @@ export const materialTheme = createTheme({
       main: theme.colors.primary
     }
   },
+  typography: {
+    fontFamily: theme.fontFamily.default,
+    h1: {
+      fontFamily: theme.fontFamily.heading
+    },
+    h2: {
+      fontFamily: theme.fontFamily.heading
+    },
+    h3: {
+      fontFamily: theme.fontFamily.heading
+    },
+    h4: {
+      fontFamily: theme.fontFamily.heading
+    },
+    h5: {
+      fontFamily: theme.fontFamily.heading
+    },
+    h6: {
+      fontFamily: theme.fontFamily.heading
+    }
+  },
   components: {
     MuiButton: {
       defaultProps: {

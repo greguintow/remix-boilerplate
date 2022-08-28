@@ -78,7 +78,7 @@ export const theme = {
   },
   fontFamily: {
     default: `'Inter',"Helvetica","Arial",sans-serif`,
-    heading: `'DM Sans', 'Roboto', 'Helvetica', 'Arial', sans-serif`
+    heading: `'DM Sans', 'Helvetica', 'Arial', sans-serif`
   },
   icon: {
     auth: '#90A0BB',
