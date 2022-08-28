@@ -12,7 +12,7 @@ ADD package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 COPY . .
 RUN yarn prisma:generate && yarn build
-RUN npm prune --production
+RUN npm prune --omit=dev
 
 FROM base AS runtime
 ENV NODE_ENV production
