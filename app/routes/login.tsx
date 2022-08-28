@@ -2,7 +2,6 @@ import { Button } from '@mui/material'
 import type { ActionFunction, LoaderFunction, MetaFunction } from '@remix-run/node'
 import { json, redirect } from '@remix-run/node'
 import { Form, Link, useActionData, useSearchParams } from '@remix-run/react'
-
 import { createUserSession, getUserId } from '~/session.server'
 import { verifyLogin } from '~/models/user.server'
 import { safeRedirect } from '~/utils'
@@ -73,31 +72,32 @@ export const meta: MetaFunction = () => {
 
 const LoginPage = () => {
   const [searchParams] = useSearchParams()
-  const [{ isSubmitDisabled }, { getInputProps, onSubmit }] = useLoginForm()
-  const redirectTo = searchParams.get('redirectTo') || '/notes'
   const actionData = useActionData() as ActionData
+  const [{ isSubmitDisabled }, { getInputProps, onSubmit }] = useLoginForm({
+    errorResponse: actionData
+  })
+  const redirectTo = searchParams.get('redirectTo') || '/notes'
 
   return (
     <div className="flex min-h-full flex-col justify-center">
       <div className="mx-auto w-full max-w-md px-8">
-        <Form method="post" className="space-y-6" onSubmit={onSubmit()} noValidate>
+        <Form method="post" className="space-y-6" onSubmit={onSubmit()}>
           <FormInput
             label="Email address"
             id="email"
             type="email"
             autoComplete="email"
-            {...getInputProps('email', {
-              errorResponse: actionData
-            })}
+            {...getInputProps('email')}
           />
           <FormInput
             label="Password"
             id="password"
             type="password"
             autoComplete="current-password"
-            {...getInputProps('password', {
-              errorResponse: actionData
-            })}
+            inputProps={{
+              minLength: 8
+            }}
+            {...getInputProps('password')}
           />
           <input type="hidden" name="redirectTo" value={redirectTo} />
           <Button
@@ -122,7 +122,7 @@ const LoginPage = () => {
               </label>
             </div>
             <div className="text-center text-sm text-gray-500">
-              Don&#39;t have an account?{' '}
+              Don&#39;t have an account?&nbsp;
               <Link
                 className="text-blue-500 underline"
                 to={{

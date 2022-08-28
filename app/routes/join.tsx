@@ -9,7 +9,7 @@ import { getUserId, createUserSession } from '~/session.server'
 import { createUser, getUserByEmail } from '~/models/user.server'
 import { safeRedirect } from '~/utils'
 import type { SignUpForm } from '~/forms/useSignUpForm'
-import { useSignUpForm, signupValidationSchema } from '~/forms/useSignUpForm'
+import { useSignUpForm, signUpValidationSchema } from '~/forms/useSignUpForm'
 import type { ErrorResponse } from '~/hooks/useCustomForm'
 import { validateSchema } from '~/hooks/useCustomForm'
 import { FormInput } from '~/components/FormInput'
@@ -33,7 +33,7 @@ export const action: ActionFunction = async ({ request }) => {
     password
   }
 
-  const { data, errorResponse } = await validateSchema(signupValidationSchema, input)
+  const { data, errorResponse } = await validateSchema(signUpValidationSchema, input)
 
   if (errorResponse) {
     return errorResponse
@@ -75,9 +75,11 @@ export const meta: MetaFunction = () => {
 
 const Join = () => {
   const [searchParams] = useSearchParams()
-  const [{ isSubmitDisabled }, { getInputProps, onSubmit }] = useSignUpForm()
-  const redirectTo = searchParams.get('redirectTo') ?? undefined
   const actionData = useActionData() as ActionData
+  const [{ isSubmitDisabled }, { getInputProps, onSubmit }] = useSignUpForm({
+    errorResponse: actionData
+  })
+  const redirectTo = searchParams.get('redirectTo') ?? undefined
 
   return (
     <div className="flex min-h-full flex-col justify-center">
@@ -88,18 +90,17 @@ const Join = () => {
             id="email"
             type="email"
             autoComplete="email"
-            {...getInputProps('email', {
-              errorResponse: actionData
-            })}
+            {...getInputProps('email')}
           />
           <FormInput
             label="Password"
             id="password"
             type="password"
             autoComplete="new-password"
-            {...getInputProps('password', {
-              errorResponse: actionData
-            })}
+            inputProps={{
+              minLength: 8
+            }}
+            {...getInputProps('password')}
           />
 
           <input type="hidden" name="redirectTo" value={redirectTo} />

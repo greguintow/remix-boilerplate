@@ -1,7 +1,7 @@
 import * as yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import type { YupSchema } from '~/hooks/useCustomForm'
-import { useCustomForm } from '~/hooks/useCustomForm'
+import { createCustomForm } from '~/hooks/useCustomForm'
 
 export interface CreateNoteForm {
   title: string
@@ -13,8 +13,6 @@ export const createNoteValidationSchema = yup.object<YupSchema<CreateNoteForm>>(
   body: yup.string().required('Body is required')
 })
 
-export const useCreateNoteForm = () => {
-  return useCustomForm<CreateNoteForm>({
-    resolver: yupResolver(createNoteValidationSchema)
-  })
-}
+export const useCreateNoteForm = createCustomForm<CreateNoteForm>({
+  resolver: yupResolver(createNoteValidationSchema)
+})

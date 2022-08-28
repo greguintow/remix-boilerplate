@@ -1,7 +1,7 @@
 import * as yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import type { YupSchema } from '~/hooks/useCustomForm'
-import { useCustomForm } from '~/hooks/useCustomForm'
+import { createCustomForm } from '~/hooks/useCustomForm'
 
 export interface LoginForm {
   email: string
@@ -13,8 +13,6 @@ export const loginValidationSchema = yup.object<YupSchema<LoginForm>>({
   password: yup.string().min(8, 'Password is too short').required('Password is required')
 })
 
-export const useLoginForm = () => {
-  return useCustomForm<LoginForm>({
-    resolver: yupResolver(loginValidationSchema)
-  })
-}
+export const useLoginForm = createCustomForm<LoginForm>({
+  resolver: yupResolver(loginValidationSchema)
+})

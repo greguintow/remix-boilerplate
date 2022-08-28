@@ -16,12 +16,18 @@ import type {
 } from 'react-hook-form'
 import type * as yup from 'yup'
 import { useForm, useFormContext } from 'react-hook-form'
+import type { SubmitFunction } from '@remix-run/react'
+import { useTransition, useSubmit } from '@remix-run/react'
+import type { Transition } from '@remix-run/react/dist/transition'
 import type { AllowJustOne } from '~/types'
 
 type CustomUseFormReturn<TFieldValues extends FieldValues = FieldValues> =
   UseFormReturn<TFieldValues> & {
     isValid: boolean
     setIsValid: (isValid: boolean) => void
+    sendSubmit?: SubmitFunction
+    transition?: Transition
+    errorResponse?: ErrorResponse<TFieldValues>
   }
 
 type CustomUseFormHandleSubmit<TFieldValues extends FieldValues> = (
@@ -30,6 +36,11 @@ type CustomUseFormHandleSubmit<TFieldValues extends FieldValues> = (
 ) => (e?: React.BaseSyntheticEvent) => void
 
 export type YupSchema<T> = Record<keyof T, yup.AnySchema<any, any, T[keyof T]>>
+
+export interface CustomUseFormProps<TFieldValues extends FieldValues = FieldValues>
+  extends UseFormProps<TFieldValues> {
+  errorResponse?: ErrorResponse<TFieldValues>
+}
 
 export interface ErrorResponse<T> {
   input: Partial<T>
@@ -68,17 +79,16 @@ export const validateSchema = async <T>(
 
 export const getInputProps = <Form extends FieldValues>(
   register: UseFormRegister<Form>,
-  formState: FormState<Form>
+  formState: FormState<Form>,
+  { errorResponse }: { errorResponse?: ErrorResponse<Form> } = {}
 ) => {
   return <TFieldName extends FieldPath<Form> = FieldPath<Form>>(
     name: TFieldName,
     {
       forceUpdate,
-      errorResponse,
       ...options
     }: RegisterOptions<Form, TFieldName> & {
       forceUpdate?: boolean
-      errorResponse?: ErrorResponse<Form>
     } = {}
   ) => {
     const mergedOptions = {
@@ -86,12 +96,11 @@ export const getInputProps = <Form extends FieldValues>(
       ...options
     }
     const { ref: inputRef, ...values } = register(name, mergedOptions)
-
     const originalServerValue = errorResponse?.input[name]
     const serverErrorMessage = errorResponse?.errors?.[name]
     const defaultValue = originalServerValue ?? serverErrorMessage?.value
     const isTouched = forceUpdate || serverErrorMessage ? true : formState.touchedFields[name]
-    const error = (formState.errors[name] || serverErrorMessage) as FieldError | undefined
+    const error = (formState.errors?.[name] || serverErrorMessage) as FieldError | undefined
 
     return {
       ...values,
@@ -119,37 +128,46 @@ const getModelsAndOperations = <TFieldValues extends FieldValues = FieldValues>(
     getValues,
     setError,
     isValid,
-    setIsValid
+    setIsValid,
+    sendSubmit,
+    transition,
+    errorResponse
   } = form
   const isFullValid = formState.isValid && isValid
+  const isLoading = transition?.state === 'submitting'
+  const isRedirecting = transition?.state === 'loading'
 
   const handleSubmit: CustomUseFormHandleSubmit<TFieldValues> = (onValid, onInvalid) => e => {
     const handleValidForm: SubmitHandler<TFieldValues> = (data, event) => {
       const target = event?.target as HTMLFormElement
-      target.submit()
+      sendSubmit?.(target)
       return onValid?.(data, event)
     }
 
     return onSubmit(handleValidForm, onInvalid)(e)
   }
 
+  const isSubmitDisabled = formState.isDirty ? !isFullValid : false
+
   const models = {
     form,
     errors: formState.errors,
     formState,
     isValid: isFullValid,
-    isSubmitDisabled: typeof window !== 'undefined' ? !isFullValid : false,
-    control
+    isSubmitDisabled: typeof window !== 'undefined' ? isSubmitDisabled : false,
+    control,
+    isLoading,
+    isRedirecting
   }
 
   const operations = {
     reset,
     watch,
     setValue,
-    onSubmit: handleSubmit,
+    onSubmit: typeof window !== 'undefined' ? () => () => {} : handleSubmit,
     getValues,
     clearErrors,
-    getInputProps: getInputProps(register, formState),
+    getInputProps: getInputProps(register, formState, { errorResponse }),
     setError,
     setIsValid
   }
@@ -157,20 +175,26 @@ const getModelsAndOperations = <TFieldValues extends FieldValues = FieldValues>(
   return [models, operations] as [typeof models, typeof operations]
 }
 
-export const useCustomForm = <TFieldValues extends FieldValues = FieldValues>(
-  props?: UseFormProps<TFieldValues>
-) => {
+export const useCustomForm = <TFieldValues extends FieldValues = FieldValues>({
+  errorResponse,
+  ...props
+}: CustomUseFormProps<TFieldValues> = {}) => {
   const [isValid, setIsValid] = useState(true)
   const form = useForm<TFieldValues>({
     mode: 'all',
     shouldFocusError: true,
     ...props
   })
+  const sendSubmit = useSubmit()
+  const transition = useTransition()
 
   const res = getModelsAndOperations({
     ...form,
     isValid,
-    setIsValid
+    setIsValid,
+    sendSubmit,
+    transition,
+    errorResponse
   })
 
   const { isSubmitDisabled } = res[0]
@@ -183,6 +207,12 @@ export const useCustomForm = <TFieldValues extends FieldValues = FieldValues>(
   }, [isSubmitDisabled])
 
   return res
+}
+
+export const createCustomForm = <T>(props?: CustomUseFormProps<T>) => {
+  return (newProps?: CustomUseFormProps<T>) => {
+    return useCustomForm({ ...props, ...newProps })
+  }
 }
 
 export const useCustomFormContext = <TFieldValues extends FieldValues = FieldValues>() => {

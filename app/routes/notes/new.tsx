@@ -1,5 +1,5 @@
-import { Button } from '@mui/material'
-import type { ActionFunction, HeadersFunction } from '@remix-run/node'
+import { LoadingButton } from '@mui/lab'
+import type { ActionFunction } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { Form, useActionData } from '@remix-run/react'
 import { createNote } from '~/models/note.server'
@@ -11,12 +11,6 @@ import { validateSchema } from '~/hooks/useCustomForm'
 import { useCreateNoteForm, createNoteValidationSchema } from '~/forms/useCreateNoteForm'
 
 interface ActionData extends ErrorResponse<CreateNoteForm> {}
-
-export const headers: HeadersFunction = () => {
-  return {
-    'cache-control': 'max-age=3600'
-  }
-}
 
 export const action: ActionFunction = async ({ request }) => {
   const userId = await requireUserId(request)
@@ -37,24 +31,26 @@ export const action: ActionFunction = async ({ request }) => {
 
 const NewNotePage = () => {
   const actionData = useActionData() as ActionData
-  const [{ isSubmitDisabled }, { getInputProps, onSubmit }] = useCreateNoteForm()
+  const [{ isSubmitDisabled, isLoading }, { getInputProps, onSubmit }] = useCreateNoteForm({
+    errorResponse: actionData
+  })
 
   return (
     <Form method="post" noValidate className="flex w-full flex-col gap-2" onSubmit={onSubmit()}>
-      <FormInput
-        id="title"
-        label="Title:"
-        {...getInputProps('title', {
-          errorResponse: actionData
-        })}
-      />
-
-      <FormInput id="body" label="Body:" {...getInputProps('body', { errorResponse: actionData })} />
+      <FormInput id="title" label="Title:" {...getInputProps('title')} />
+      <FormInput id="body" label="Body:" {...getInputProps('body')} />
 
       <div className="text-right">
-        <Button type="submit" disabled={isSubmitDisabled} disableElevation variant="contained">
+        <LoadingButton
+          loading={isLoading}
+          type="submit"
+          disabled={isSubmitDisabled}
+          disableElevation
+          variant="contained"
+          className="w-[100px]"
+        >
           Save
-        </Button>
+        </LoadingButton>
       </div>
     </Form>
   )
